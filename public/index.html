@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Portfolio Manager</title>
+  <meta name="description" content="A simple database application to manage stock investments and monitor portfolio risk. DBMS College Project." />
+
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       NAVIGATION BAR
+  ═══════════════════════════════════════════════════════ -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="nav-icon">📊</span>
+      <span class="nav-title">Financial Portfolio Manager</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#" class="nav-link active" data-section="dashboard">Dashboard</a></li>
+      <li><a href="#" class="nav-link" data-section="holdings">My Holdings</a></li>
+      <li><a href="#" class="nav-link" data-section="stocks">Stocks</a></li>
+      <li><a href="#" class="nav-link" data-section="risk">Risk Analysis</a></li>
+      <li><a href="#" class="nav-link" data-section="about">About Project</a></li>
+    </ul>
+    <!-- Hamburger for mobile -->
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">&#9776;</button>
+  </nav>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <h1>Financial Portfolio Manager</h1>
+    <p class="subtitle">A simple database application to manage stock investments and monitor portfolio risk.</p>
+    <p class="demo-notice">⚠️ Demo mode — using sample data. Stock prices are illustrative only and not real market data.</p>
+  </header>
+
+  <main class="main-content">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 1: DASHBOARD
+    ═══════════════════════════════════════════════════════ -->
+    <section id="section-dashboard" class="section active">
+      <h2 class="section-title">Dashboard</h2>
+
+      <!-- Summary cards -->
+      <div class="cards-grid" id="summaryCards">
+        <div class="card" id="card-investment">
+          <div class="card-label">Total Investment</div>
+          <div class="card-value" id="totalInvestment">Loading…</div>
+        </div>
+        <div class="card" id="card-value">
+          <div class="card-label">Current Portfolio Value</div>
+          <div class="card-value" id="currentValue">Loading…</div>
+        </div>
+        <div class="card" id="card-pnl">
+          <div class="card-label">Profit / Loss</div>
+          <div class="card-value" id="pnlAmount">Loading…</div>
+          <div class="card-sub"  id="pnlPercent"></div>
+        </div>
+        <div class="card" id="card-holdings">
+          <div class="card-label">Holdings</div>
+          <div class="card-value" id="holdingCount">Loading…</div>
+          <div class="card-sub"  id="distinctStocks"></div>
+        </div>
+      </div>
+
+      <!-- Pie chart -->
+      <div class="chart-container">
+        <h3 class="chart-title">Portfolio Allocation by Sector</h3>
+        <canvas id="sectorChart" width="320" height="320"></canvas>
+        <p class="chart-note">Based on current sample prices from the database.</p>
+      </div>
+
+      <!-- Recent holdings table -->
+      <div class="table-section">
+        <h3>Recent Holdings</h3>
+        <div class="table-wrapper">
+          <table id="recentHoldingsTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Qty</th>
+                <th>Buy Price (₹)</th>
+                <th>Current Price (₹)</th>
+                <th>Invested (₹)</th>
+                <th>Current Value (₹)</th>
+                <th>P&amp;L (₹)</th>
+                <th>Risk</th>
+              </tr>
+            </thead>
+            <tbody id="recentHoldingsBody">
+              <tr><td colspan="9" class="loading-cell">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 2: MY HOLDINGS
+    ═══════════════════════════════════════════════════════ -->
+    <section id="section-holdings" class="section">
+      <h2 class="section-title">My Holdings</h2>
+      <p class="section-note">This application runs as a single demo investor. No login required.</p>
+
+      <!-- Add Holding Form -->
+      <div class="form-card">
+        <h3>Add a New Holding</h3>
+        <form id="addHoldingForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="selectStock">Stock *</label>
+              <select id="selectStock" name="stock_id" required>
+                <option value="">-- Select a stock --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="inputQty">Quantity *</label>
+              <input type="number" id="inputQty" name="quantity"
+                     min="1" step="1" placeholder="e.g. 10" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inputPrice">Purchase Price per Share (₹) *</label>
+              <input type="number" id="inputPrice" name="purchase_price"
+                     min="0.01" step="0.01" placeholder="e.g. 1500.00" required />
+            </div>
+            <div class="form-group">
+              <label for="inputDate">Purchase Date *</label>
+              <input type="date" id="inputDate" name="purchase_date" required />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Holding</button>
+            <button type="reset"  class="btn btn-secondary">Clear</button>
+          </div>
+          <div id="holdingFormMsg" class="form-message"></div>
+        </form>
+      </div>
+
+      <!-- Holdings Table -->
+      <div class="table-section">
+        <h3>All Holdings</h3>
+        <div class="table-wrapper">
+          <table id="holdingsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Sector</th>
+                <th>Qty</th>
+                <th>Buy Price (₹)</th>
+                <th>Current (₹)</th>
+                <th>Invested (₹)</th>
+                <th>Value (₹)</th>
+                <th>P&amp;L (₹)</th>
+                <th>Date</th>
+                <th>Risk</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="holdingsBody">
+              <tr><td colspan="13" class="loading-cell">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 3: STOCKS
+    ═══════════════════════════════════════════════════════ -->
+    <section id="section-stocks" class="section">
+      <h2 class="section-title">Stocks</h2>
+      <p class="section-note">
+        The prices shown are <strong>sample / illustrative data</strong>, not live market prices.
+        You can update a stock's sample price using the form below each row.
+      </p>
+
+      <div class="table-section">
+        <div class="table-wrapper">
+          <table id="stocksTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Sector</th>
+                <th>Sample Price (₹)</th>
+                <th>Risk Level</th>
+                <th>Update Sample Price</th>
+              </tr>
+            </thead>
+            <tbody id="stocksBody">
+              <tr><td colspan="6" class="loading-cell">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Price History Panel -->
+      <div id="historyPanel" class="form-card" style="display:none;">
+        <h3>Price History: <span id="historyStockName"></span></h3>
+        <canvas id="historyChart" height="100"></canvas>
+        <p class="chart-note">Shows recorded sample price updates for this stock.</p>
+        <button class="btn btn-secondary" id="closeHistoryBtn">Close</button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 4: RISK ANALYSIS
+    ═══════════════════════════════════════════════════════ -->
+    <section id="section-risk" class="section">
+      <h2 class="section-title">Risk Analysis</h2>
+      <p class="section-note">
+        ⚠️ These are educational indicators only, not professional financial advice.
+        They are based on sample categories stored in the database.
+      </p>
+
+      <!-- Warnings -->
+      <div id="riskWarnings"></div>
+
+      <!-- Cards for risk breakdown -->
+      <div class="cards-grid" id="riskCards">
+        <div class="card">
+          <div class="card-label">Low Risk Allocation</div>
+          <div class="card-value" id="riskLow">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Medium Risk Allocation</div>
+          <div class="card-value" id="riskMedium">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">High Risk Allocation</div>
+          <div class="card-value" id="riskHigh">-</div>
+        </div>
+      </div>
+
+      <!-- Stock allocation table -->
+      <div class="table-section">
+        <h3>Stock Allocation</h3>
+        <div class="table-wrapper">
+          <table id="riskTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Sector</th>
+                <th>Risk Level</th>
+                <th>Quantity</th>
+                <th>Current Value (₹)</th>
+                <th>Portfolio %</th>
+              </tr>
+            </thead>
+            <tbody id="riskBody">
+              <tr><td colspan="7" class="loading-cell">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sector allocation chart -->
+      <div class="chart-container">
+        <h3 class="chart-title">Sector Allocation</h3>
+        <canvas id="riskSectorChart" width="320" height="320"></canvas>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SECTION 5: ABOUT PROJECT
+    ═══════════════════════════════════════════════════════ -->
+    <section id="section-about" class="section">
+      <h2 class="section-title">About Project</h2>
+
+      <div class="about-card">
+        <h3>Project Name</h3>
+        <p><strong>Real-Time Financial Portfolio &amp; Risk Management Database</strong></p>
+
+        <h3>Project Description</h3>
+        <p>
+          This project demonstrates how a relational database can be used to store investor information,
+          stock details, investment holdings, and price history. It uses SQL queries to calculate portfolio
+          value, profit or loss, allocation, and simple risk indicators.
+        </p>
+        <p>
+          <em>All stock prices are illustrative sample data. This application does not connect to any
+          live market feed or financial data provider.</em>
+        </p>
+
+        <h3>Technology Stack</h3>
+        <ul>
+          <li><strong>Frontend:</strong> HTML, CSS, Vanilla JavaScript</li>
+          <li><strong>Backend:</strong> Node.js with Express.js</li>
+          <li><strong>Database:</strong> MySQL</li>
+          <li><strong>DB Connector:</strong> mysql2 (with promise support)</li>
+          <li><strong>Charts:</strong> Chart.js</li>
+        </ul>
+
+        <h3>DBMS Concepts Demonstrated</h3>
+        <table class="about-table">
+          <thead><tr><th>Concept</th><th>Where Used</th></tr></thead>
+          <tbody>
+            <tr><td>Database Creation</td><td><code>CREATE DATABASE financial_portfolio</code></td></tr>
+            <tr><td>Tables &amp; Relationships</td><td>investors, stocks, holdings, price_history, transactions</td></tr>
+            <tr><td>Primary Keys</td><td>investor_id, stock_id, holding_id, etc.</td></tr>
+            <tr><td>Foreign Keys</td><td>holdings → investors, holdings → stocks, price_history → stocks</td></tr>
+            <tr><td>Constraints (CHECK)</td><td>quantity &gt; 0, purchase_price &gt; 0, risk_level IN ('Low','Medium','High')</td></tr>
+            <tr><td>INSERT</td><td>Add holding form, sample data</td></tr>
+            <tr><td>SELECT with JOIN</td><td>Dashboard, holdings list, risk analysis</td></tr>
+            <tr><td>UPDATE</td><td>Update sample stock price</td></tr>
+            <tr><td>DELETE</td><td>Delete a holding</td></tr>
+            <tr><td>Aggregate Functions (SUM, COUNT)</td><td>Dashboard totals, allocation calculations</td></tr>
+            <tr><td>GROUP BY</td><td>Sector allocation, risk breakdown</td></tr>
+            <tr><td>COALESCE (handles NULL)</td><td>Empty portfolio totals default to 0</td></tr>
+            <tr><td>Parameterized Queries</td><td>All INSERT, UPDATE, DELETE routes use <code>?</code> placeholders</td></tr>
+            <tr><td>Database Transactions</td><td>Stock price update + history insert wrapped in BEGIN/COMMIT/ROLLBACK</td></tr>
+            <tr><td>Indexes</td><td>idx_holdings_investor, idx_holdings_stock, idx_history_stock</td></tr>
+            <tr><td>Data Visualization</td><td>Chart.js pie/doughnut charts</td></tr>
+          </tbody>
+        </table>
+
+        <h3>How the Application Works</h3>
+        <ol>
+          <li>The <strong>browser</strong> (HTML + CSS + JavaScript) sends HTTP requests to the backend.</li>
+          <li>The <strong>Express.js backend</strong> (Node.js) receives those requests and runs SQL queries.</li>
+          <li>The <strong>MySQL database</strong> stores all data and returns results to the backend.</li>
+          <li>The backend sends JSON responses back to the browser, which displays the data.</li>
+        </ol>
+
+        <h3>Database Schema</h3>
+        <pre class="schema-pre">
+investors  ──────┐
+                 │ (investor_id FK)
+                 ▼
+holdings ────────┤
+                 │ (stock_id FK)
+                 ▼
+stocks ──────────┤
+                 │ (stock_id FK)
+                 ▼
+price_history    │
+                 │
+transactions ◄───┘ (holding_id FK)
+        </pre>
+
+        <h3>Disclaimer</h3>
+        <p>
+          This application is built purely for educational purposes as part of a B.Tech DBMS course project.
+          The risk indicators and portfolio calculations are simplified educational tools.
+          They do not constitute professional financial advice or a validated risk model.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Financial Portfolio Manager &mdash; B.Tech DBMS College Project &mdash; Sample data only.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

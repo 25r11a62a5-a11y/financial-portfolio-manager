@@ -1,0 +1,20 @@
+{
+  "name": "financial-portfolio-manager",
+  "version": "1.0.0",
+  "description": "A beginner-friendly DBMS college project — Financial Portfolio Manager",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev":   "node server.js"
+  },
+  "keywords": ["dbms", "mysql", "express", "college-project"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv":  "^18.0.9",
+    "express": "^5.3.0",
+    "mysql2":  "^3.24.6"
+  },
+  "devDependencies": {}
+}
