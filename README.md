@@ -195,23 +195,3 @@ Browser (updates the page)
 ```
 
 ---
-
-## Faculty Q&A
-
-**Q: What is a foreign key?**
-A: A foreign key in one table points to the primary key of another table, enforcing that only valid references exist. For example, `holdings.investor_id` must match an `investor_id` in the `investors` table.
-
-**Q: Why use parameterized queries?**
-A: To prevent SQL injection attacks. Instead of putting user input directly into the SQL string, we use `?` placeholders and pass values separately so MySQL handles escaping safely.
-
-**Q: What is a database transaction?**
-A: A transaction groups multiple SQL statements so they either all succeed (COMMIT) or all fail together (ROLLBACK). In this project, updating a stock price and inserting the history record happen inside one transaction.
-
-**Q: What does COALESCE do?**
-A: COALESCE returns the first non-NULL value in a list. We use it so that when the portfolio is empty and SUM() returns NULL, we get 0 instead.
-
-**Q: Why is a connection pool used instead of a single connection?**
-A: A pool keeps several connections open and reuses them, which is more efficient than opening and closing a new database connection for every API request.
-
-**Q: What is the difference between a primary key and a unique key?**
-A: A primary key uniquely identifies each row and cannot be NULL. A unique key also enforces uniqueness but can allow NULL. For example, `stock.symbol` has a UNIQUE constraint but is not the primary key.
